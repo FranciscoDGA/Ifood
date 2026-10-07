@@ -39,6 +39,15 @@ export async function parseBody<T>(request: NextRequest, schema: ZodType<T>): Pr
 }
 
 export function handle(err: unknown): NextResponse {
-  const message = err instanceof Error ? err.message : "Erro inesperado.";
+  const message = friendlyMessage(err);
   return NextResponse.json({ error: message }, { status: 500 });
+}
+
+/** O Drizzle embrulha o erro do Neon em "Failed query: … params:"; prefere a causa. */
+function friendlyMessage(err: unknown): string {
+  if (!(err instanceof Error)) return "Erro inesperado.";
+  if (err.message.startsWith("Failed query") && err.cause instanceof Error) {
+    return err.cause.message || "Erro no banco de dados.";
+  }
+  return err.message || "Erro inesperado.";
 }

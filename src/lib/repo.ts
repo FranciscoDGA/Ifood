@@ -125,6 +125,27 @@ export type InboundMessage = {
   raw: unknown;
 };
 
+/** Mensagem de erro concatenando a cadeia `cause` (o Drizzle embrulha a do Neon). */
+function errorText(err: unknown): string {
+  const parts: string[] = [];
+  let current: unknown = err;
+  for (let depth = 0; current && depth < 5; depth++) {
+    if (current instanceof Error) {
+      parts.push(current.message);
+      current = current.cause;
+    } else {
+      parts.push(String(current));
+      break;
+    }
+  }
+  return parts.join(" | ");
+}
+
+/** Postgres 23505 = unique_violation (messageid duplicado no webhook). */
+function isUniqueViolation(err: unknown): boolean {
+  return /duplicate key|unique constraint|\b23505\b/i.test(errorText(err));
+}
+
 /** Insere se o messageid ainda não existir. Retorna false em duplicata. */
 export async function insertMessageIfNew(msg: InboundMessage): Promise<boolean> {
   await ensureSchema();
@@ -143,8 +164,7 @@ export async function insertMessageIfNew(msg: InboundMessage): Promise<boolean> 
     });
     return true;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (/duplicate|unique/i.test(message)) return false;
+    if (isUniqueViolation(err)) return false;
     throw err;
   }
 }
