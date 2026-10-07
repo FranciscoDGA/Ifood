@@ -90,3 +90,43 @@ export async function getMe(
     return null;
   }
 }
+
+export type InstanceState =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "hibernated"
+  | string;
+
+export type InstanceInfo = {
+  status?: InstanceState;
+  paircode?: string | null;
+  qrcode?: string | null;
+  name?: string;
+  profileName?: string;
+  lastDisconnect?: string;
+};
+
+export type InstanceSnapshot = {
+  instance?: InstanceInfo;
+  status?: { connected?: boolean; loggedIn?: boolean };
+  request_id?: string;
+};
+
+/** POST /instance/connect — sem phone devolve QR code, com phone devolve código de pareamento. */
+export async function connectInstance(
+  s: Pick<Settings, "uazapiUrl" | "uazapiToken">,
+  phone?: string
+): Promise<InstanceSnapshot> {
+  return call(s, "/instance/connect", {
+    method: "POST",
+    body: JSON.stringify(phone ? { phone } : {}),
+  });
+}
+
+/** GET /instance/status — estado atual + QR/código atualizados durante o pareamento. */
+export async function getInstanceStatus(
+  s: Pick<Settings, "uazapiUrl" | "uazapiToken">
+): Promise<InstanceSnapshot> {
+  return call(s, "/instance/status", { method: "GET" });
+}
