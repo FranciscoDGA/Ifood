@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Lock, Loader2 } from "lucide-react";
 
 export default function LoginForm() {
   const router = useRouter();
-  const search = useSearchParams();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +25,8 @@ export default function LoginForm() {
         setError(data.error || "Falha ao entrar.");
         return;
       }
-      const from = search.get("from") || "/";
+      const from =
+        new URLSearchParams(window.location.search).get("from") || "/";
       router.replace(from);
       router.refresh();
     } catch {
