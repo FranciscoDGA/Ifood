@@ -71,7 +71,14 @@ export async function configureWebhook(
 ): Promise<unknown> {
   return call(s, "/webhook", {
     method: "POST",
-    body: JSON.stringify({ url, events }),
+    body: JSON.stringify({
+      url,
+      events,
+      // O padrão da UAZAPI é enabled:false — sem isso nada chega.
+      enabled: true,
+      // Não devolve para o painel as mensagens que o próprio app enviou.
+      excludeMessages: ["wasSentByApi"],
+    }),
   });
 }
 
@@ -109,7 +116,7 @@ export type InstanceInfo = {
 
 export type InstanceSnapshot = {
   instance?: InstanceInfo;
-  status?: { connected?: boolean; loggedIn?: boolean };
+  status?: { connected?: boolean; loggedIn?: boolean; jid?: { user?: string } };
   request_id?: string;
 };
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handle, requireApiAuth } from "@/lib/api";
 import { getSettings } from "@/lib/settings";
-import { getMe, sendText, UazapiError } from "@/lib/uazapi";
+import { getInstanceStatus, sendText, UazapiError } from "@/lib/uazapi";
 import { normalizePhone } from "@/lib/phone";
 
 export const runtime = "nodejs";
@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const settings = await getSettings();
-    const me = await getMe(settings);
+    const snap = await getInstanceStatus(settings);
+    const status = snap.instance?.status ?? "desconhecido";
+    const connected = snap.status?.connected ?? status === "connected";
 
     const body = await request.json().catch(() => ({}) as { to?: string });
     const to = normalizePhone(body.to ?? "");
@@ -23,7 +25,14 @@ export async function POST(request: NextRequest) {
       sent = true;
     }
 
-    return NextResponse.json({ ok: true, instance: me, sent });
+    return NextResponse.json({
+      ok: true,
+      connected,
+      status,
+      profileName: snap.instance?.profileName || "",
+      number: snap.status?.jid?.user ?? "",
+      sent,
+    });
   } catch (err) {
     if (err instanceof UazapiError) {
       return NextResponse.json({ ok: false, error: err.message }, { status: 502 });

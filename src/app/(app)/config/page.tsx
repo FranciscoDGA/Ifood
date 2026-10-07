@@ -137,7 +137,12 @@ export default function ConfigPage() {
       const body = await res.json().catch(() => ({}));
       setMsg(
         body.ok
-          ? { kind: "ok", text: "Instância conectada." }
+          ? body.connected
+            ? {
+                kind: "ok",
+                text: `Instância conectada${body.profileName ? ` ao WhatsApp “${body.profileName}”` : ""}${body.number ? ` (${body.number})` : ""}.`,
+              }
+            : { kind: "ok", text: "Instância encontrada, mas ainda não conectada ao WhatsApp." }
           : { kind: "err", text: body.error || "Falha na conexão." }
       );
     } catch {
