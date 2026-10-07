@@ -25,12 +25,16 @@ export async function POST(request: NextRequest) {
       sent = true;
     }
 
+    const jid = snap.status?.jid;
+    const number =
+      typeof jid === "string" ? jid.split(":")[0] || "" : jid?.user ?? "";
+
     return NextResponse.json({
       ok: true,
       connected,
       status,
       profileName: snap.instance?.profileName || "",
-      number: snap.status?.jid?.user ?? "",
+      number,
       sent,
     });
   } catch (err) {

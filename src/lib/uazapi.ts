@@ -116,7 +116,12 @@ export type InstanceInfo = {
 
 export type InstanceSnapshot = {
   instance?: InstanceInfo;
-  status?: { connected?: boolean; loggedIn?: boolean; jid?: { user?: string } };
+  status?: {
+    connected?: boolean;
+    loggedIn?: boolean;
+    /** A UAZAPI devolve string ("5511...:1@s.whatsapp.net") ou objeto. */
+    jid?: string | { user?: string };
+  };
   request_id?: string;
 };
 
